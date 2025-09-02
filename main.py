@@ -1,15 +1,28 @@
-from typing import Union
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
+from functions import get_travel_time
 
 app = FastAPI()
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+@app.get("/travel-time")
+def handle_get_travel_time(
+    start: Annotated[
+        str,
+        Query(
+            description='The location of the starting position. In the format of "lon,lat" as '
+            "floats without a space after the comma.",
+            pattern="^-?\d+\.\d+,-?\d+\.\d+$",
+        ),
+    ],
+    end: Annotated[
+        str,
+        Query(
+            description='The location of the ending position. In the format of "lon,lat" as floats '
+            "without a space after the comma.",
+            pattern="^-?\d+\.\d+,-?\d+\.\d+$",
+        ),
+    ],
+):
+    return get_travel_time(start, end)
