@@ -1,3 +1,4 @@
-from .get_travel_time import get_travel_time
+from .travel_time import travel_time
+from .optimal_route import optimal_route
 
-__all__ = ["get_travel_time"]
+__all__ = ["travel_time", "optimal_route"]
