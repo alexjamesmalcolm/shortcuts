@@ -71,4 +71,7 @@ def optimal_route(inp: OptimalRouteInput, progress) -> dict:
     if not best_route:
         raise Exception("Unable to find the best route")
 
-    return {"travel_times": travel_times, "best_route": best_route}
+    return {
+        "travel_times": travel_times,
+        "best_route": [location.model_dump_json() for location in best_route],
+    }
