@@ -32,7 +32,7 @@ def optimal_route(inp: OptimalRouteInput, progress) -> dict:
     def mark_step_done():
         nonlocal step_count
         step_count = step_count + 1
-        progress(step_count / total_steps)
+        progress(step_count // total_steps)
 
     for start, end in location_permutations:
         if (
