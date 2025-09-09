@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from tasks_core import build_router, task_status
+import configure_logging
 
 app = FastAPI(title="Typed Tasks API")
 
 # Register routes for all tasks you've defined under functions/
 # Importing functions.* modules populates the task registry via decorators
-import functions  # noqa: F401
+import functions  # noqa: E402, F401
 
 # Mount the auto-generated endpoints under /run/<task-name>
 app.include_router(build_router(prefix="/run"))

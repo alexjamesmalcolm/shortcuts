@@ -1,3 +1,4 @@
+from typing import TypedDict
 from time import sleep
 from pydantic import BaseModel
 import pydantic
@@ -21,8 +22,17 @@ class TravelTimeInput(BaseModel):
     retry_pause_seconds: float = 0.2
 
 
+class TravelTimeResult(TypedDict):
+    duration: float
+    profile: str
+
+
 @define_task("travel-time", TravelTimeInput)
-def travel_time(inp: TravelTimeInput, progress):
+def wrapper(inp: TravelTimeInput, progress):
+    return travel_time(inp, progress)
+
+
+def travel_time(inp: TravelTimeInput, progress) -> TravelTimeResult:
     url = (
         f"https://router.project-osrm.org/route/v1/"
         f"{inp.profile}/{inp.start_lon_lat};{inp.end_lon_lat}"

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, Dict, Type, Optional
+from typing import Callable, Dict, Type, Optional, TypeVar
 from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel, ValidationError
 from celery import Celery
@@ -21,6 +21,8 @@ class _TaskMeta:
 
 TASKS: Dict[str, _TaskMeta] = {}
 
+UserFuncResult = TypeVar("UserFuncResult")
+
 
 # Public decorator
 def define_task(name: str, input_model: Type[BaseModel]):
@@ -32,7 +34,7 @@ def define_task(name: str, input_model: Type[BaseModel]):
             return {...}
     """
 
-    def wrapper(user_func: Callable[..., dict]):
+    def wrapper(user_func: Callable[..., UserFuncResult]):
         celery_task_name = f"tasks.{name}"
 
         @celery.task(bind=True, name=celery_task_name)
