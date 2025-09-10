@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Literal
 from itertools import permutations
 import math
 import pydantic
@@ -17,6 +17,9 @@ class OptimalRouteInput(pydantic.BaseModel):
     origin: Location
     destination: Location
     stops: List[Location]
+    profile: Literal["driving", "walking", "cycling"] = (
+        "driving"  # OSRM profile: driving, walking, cycling
+    )
 
 
 @define_task("optimal-route", OptimalRouteInput)
@@ -48,6 +51,7 @@ def optimal_route(inp: OptimalRouteInput, progress) -> dict:
             TravelTimeInput(
                 start_lon_lat=f"{start.lon},{start.lat}",
                 end_lon_lat=f"{end.lon},{end.lat}",
+                profile=inp.profile,
             ),
             lambda percent: None,
         )["duration"]
