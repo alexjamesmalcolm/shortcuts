@@ -74,4 +74,5 @@ def optimal_route(inp: OptimalRouteInput, progress) -> dict:
     return {
         "travel_times": travel_times,
         "best_route": [location.model_dump() for location in best_route],
+        "best_route_time": best_travel_time,
     }
