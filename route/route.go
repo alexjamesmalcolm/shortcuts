@@ -117,7 +117,7 @@ func (i OptimalRouteInput) Execute() (OptimalRouteResult, error) {
 	}
 	return OptimalRouteResult{
 		TravelTimes:   travelTimes,
-		BestRoute:     []Location{},
+		BestRoute:     bestRoute,
 		BestRouteTime: bestTravelTime,
 	}, nil
 }
