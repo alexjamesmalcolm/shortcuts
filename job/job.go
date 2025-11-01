@@ -11,7 +11,7 @@ type Executer[O any] interface {
 	Execute() (O, error)
 }
 
-func MakeJob[Input Executer[Output], Output any](path string) {
+func DefineJob[Input Executer[Output], Output any](path string) {
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusNotImplemented)
