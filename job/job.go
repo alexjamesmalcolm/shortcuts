@@ -83,12 +83,14 @@ func StartTaskMaster() {
 func executeJobAndReportToTask[Input Executer[Output], Output any](task Task, i Input) {
 	result, err := i.Execute()
 	if err != nil {
+		log.Printf("task %v failed to execute because %v", task.ID, err)
 		task.Status = StatusError
 		tasks.Set(task.ID, task)
 		return
 	}
 	jsonStringResult, err := json.Marshal(result)
 	if err != nil {
+		log.Printf("task %v failed to have its results marshaled to JSON because %v", err)
 		task.Status = StatusError
 		tasks.Set(task.ID, task)
 		return
@@ -100,7 +102,9 @@ func executeJobAndReportToTask[Input Executer[Output], Output any](task Task, i 
 
 func DefineJob[Input Executer[Output], Output any](path string) {
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("received %v request at %v", r.Method, path)
 		if r.Method != http.MethodPost {
+			log.Printf("%v method is not implement on path %v", r.Method, path)
 			w.WriteHeader(http.StatusNotImplemented)
 			fmt.Fprintf(w, "Not Implemented: %v", r.Method)
 			return
@@ -121,6 +125,7 @@ func DefineJob[Input Executer[Output], Output any](path string) {
 			Status: StatusInProgress,
 			Time:   time.Now(),
 		}
+		log.Printf("created task %v to handle request to %v", task.ID, path)
 		tasks.Set(task.ID, task)
 		go executeJobAndReportToTask(task, input)
 
