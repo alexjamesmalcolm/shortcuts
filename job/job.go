@@ -60,6 +60,7 @@ func StartTaskMaster() {
 		task, ok := tasks.Get(ID)
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, "404 Could not find Task with ID %v", ID)
 			return
 		}
 		json, err := json.Marshal(task)
