@@ -1,29 +1,20 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"shortcuts/job"
+	"shortcuts/osrm"
+	"shortcuts/route"
 	"strconv"
 )
 
-type Message struct {
-	Message string `json:"message"`
-}
-
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		data, err := json.Marshal(Message{"Hello world!"})
-		if err != nil {
-			panic("IDK")
-		}
-		_, err = w.Write(data)
-		if err != nil {
-			panic("IDK")
-		}
-	})
+	job.StartTaskMaster()
+	job.DefineJob[osrm.GetTravelTimeInput]("/run/travel-time/")
+	job.DefineJob[route.OptimalRouteInput]("/run/optimal-route/")
 
 	portString := os.Getenv("PORT")
 	port, err := strconv.ParseUint(portString, 10, 16)
