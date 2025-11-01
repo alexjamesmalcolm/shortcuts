@@ -13,8 +13,8 @@ import (
 
 func main() {
 	job.StartTaskMaster()
-	job.DefineJob[osrm.GetTravelTimeInput]("/run/travel-time/")
-	job.DefineJob[route.OptimalRouteInput]("/run/optimal-route/")
+	job.DefineJob[osrm.GetTravelTimeInput]("/run/travel-time")
+	job.DefineJob[route.OptimalRouteInput]("/run/optimal-route")
 
 	portString := os.Getenv("PORT")
 	port, err := strconv.ParseUint(portString, 10, 16)
