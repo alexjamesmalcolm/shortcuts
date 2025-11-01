@@ -3,15 +3,15 @@ package osrm
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Location struct {
-	Latitude  float64 `json:"lat"`
-	Longitude float64 `json:"lon"`
+	Latitude  string `json:"lat"`
+	Longitude string `json:"lon"`
 }
 
 type Profile string
@@ -41,17 +41,17 @@ func (s StringLonLat) Location() (Location, error) {
 		return Location{}, fmt.Errorf("expected lon,lat but instead received %v", s)
 
 	}
-	lat, err := strconv.ParseFloat(temp[1], 64)
+	_, err := strconv.ParseFloat(temp[1], 64)
 	if err != nil {
 		return Location{}, fmt.Errorf("unable to parse latitude from %v", temp[1])
 	}
-	long, err := strconv.ParseFloat(temp[0], 64)
+	_, err = strconv.ParseFloat(temp[0], 64)
 	if err != nil {
 		return Location{}, fmt.Errorf("unable to parse longitude from %v", temp[0])
 	}
 	return Location{
-		Latitude:  lat,
-		Longitude: long,
+		Latitude:  temp[1],
+		Longitude: temp[0],
 	}, nil
 }
 
@@ -71,24 +71,27 @@ func (i GetTravelTimeInput) Execute() (float64, error) {
 	return GetTravelTime(start, end, i.Profile)
 }
 
+var clientMu sync.Mutex
+var client = &http.Client{}
+
 func GetTravelTime(start, end Location, profile Profile) (float64, error) {
+	clientMu.Lock()
+	defer clientMu.Unlock()
 	if profile == "" {
 		profile = "driving"
 	}
 	url := fmt.Sprintf(
-		`https://router.project-osrm.org/route/v1/%v/%v,%v;%v,%v`,
+		`https://router.project-osrm.org/route/v1/%v/%v,%v;%v,%v?overview=false&alternatives=false&steps=false`,
 		profile,
 		start.Longitude,
 		start.Latitude,
 		end.Longitude,
 		end.Latitude,
 	)
-	log.Println(url)
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return 0, err
 	}
-	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
 		return 0, err

@@ -21,11 +21,11 @@ func MakeJob[Input Executer[Output], Output any](path string) {
 		var input Input
 		err := json.NewDecoder(r.Body).Decode(&input)
 		if err != nil {
+			log.Printf("unexpected error while parsing JSON: %v\n", err)
 			_, err = w.Write([]byte(err.Error()))
 			if err != nil {
 				log.Println(err)
 			}
-			log.Printf("unexpected error while parsing JSON: %v\n", err)
 			return
 		}
 		result, err := input.Execute()
