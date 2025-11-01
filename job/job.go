@@ -47,14 +47,26 @@ type Task struct {
 	Time   time.Time       `json:"time"`
 }
 
-type TaskMaster struct {
+type taskMaster struct {
 	safemap.SafeMap[string, Task]
 }
 
-var tasks = safemap.New[string, Task]()
+func (m *taskMaster) occasionallyPrune(frequency, lifespan time.Duration) {
+	ticker := time.NewTicker(frequency)
+	for range ticker.C {
+		m.Filter(func(k string, v Task) bool {
+			// expirationTime is the time that the task was created plus its lifespan.
+			expirationTime := v.Time.Add(lifespan)
+			return expirationTime.After(time.Now())
+		})
+	}
+}
+
+var tasks taskMaster = taskMaster{safemap.New[string, Task]()}
 var taskIDCounter counter.Counter
 
 func StartTaskMaster() {
+	go tasks.occasionallyPrune(5*time.Minute, time.Hour)
 	http.HandleFunc("/tasks/", func(w http.ResponseWriter, r *http.Request) {
 		ID := strings.TrimPrefix(r.URL.Path, "/tasks/")
 		task, ok := tasks.Get(ID)

@@ -18,6 +18,16 @@ func (s *SafeMap[Key, Value]) Set(k Key, v Value) {
 	defer s.mu.Unlock()
 	s.m[k] = v
 }
+func (s *SafeMap[Key, Value]) Filter(fn func(k Key, v Value) bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for key, value := range s.m {
+		isStaying := fn(key, value)
+		if !isStaying {
+			delete(s.m, key)
+		}
+	}
+}
 
 func New[Key comparable, Value any]() SafeMap[Key, Value] {
 	return SafeMap[Key, Value]{
