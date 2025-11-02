@@ -4,6 +4,7 @@ import (
 	"log"
 	"math"
 	"shortcuts/osrm"
+	"strings"
 	"time"
 
 	"github.com/ernestosuarez/itertools"
@@ -13,6 +14,10 @@ type Location struct {
 	Address   string `json:"address"`
 	Latitude  string `json:"lat"`
 	Longitude string `json:"lon"`
+}
+
+func (l Location) Street() string {
+	return strings.Split(l.Address, "\n")[0]
 }
 
 type OptimalRouteInput struct {
@@ -46,7 +51,7 @@ func getTravelTime(start, end Location, profile osrm.Profile) travelTimeResult {
 			Longitude: end.Longitude,
 		}, profile)
 		if err == nil {
-			log.Printf("Travel time from %v to %v is %v", start.Address, end.Address, travelTime)
+			log.Printf("Travel time from %v to %v is %v", start.Street(), end.Street(), travelTime)
 			break
 		}
 		log.Printf("retrying")
