@@ -18,6 +18,17 @@ func (s *SafeMap[Key, Value]) Set(k Key, v Value) {
 	defer s.mu.Unlock()
 	s.m[k] = v
 }
+
+// Update will update a value only if it exists. It reports whether it was able to find and update using the key.
+func (s *SafeMap[Key, Value]) Update(k Key, v Value) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, ok := s.m[k]
+	if ok {
+		s.m[k] = v
+	}
+	return ok
+}
 func (s *SafeMap[Key, Value]) Filter(fn func(k Key, v Value) bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -27,6 +38,11 @@ func (s *SafeMap[Key, Value]) Filter(fn func(k Key, v Value) bool) {
 			delete(s.m, key)
 		}
 	}
+}
+func (s *SafeMap[Key, Value]) Delete(key Key) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.m, key)
 }
 
 func New[Key comparable, Value any]() SafeMap[Key, Value] {

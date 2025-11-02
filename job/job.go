@@ -65,29 +65,55 @@ func (m *taskMaster) occasionallyPrune(frequency, lifespan time.Duration) {
 var tasks taskMaster = taskMaster{safemap.New[string, Task]()}
 var taskIDCounter counter.Counter
 
+func handleTaskGet(w http.ResponseWriter, r *http.Request) {
+	ID := strings.TrimPrefix(r.URL.Path, "/tasks/")
+	task, ok := tasks.Get(ID)
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "404 Could not find Task with ID %v", ID)
+		return
+	}
+	json, err := json.Marshal(task)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	_, err = w.Write(json)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+}
+
+func handleTaskDelete(w http.ResponseWriter, r *http.Request) {
+	ID := strings.TrimPrefix(r.URL.Path, "/tasks/")
+	_, ok := tasks.Get(ID)
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "404 Could not find Task with ID %v", ID)
+		return
+	}
+	tasks.Delete(ID)
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "200 Successfully deleted Task with ID %v", ID)
+}
+
 func StartTaskMaster() {
 	go tasks.occasionallyPrune(5*time.Minute, time.Hour)
 	http.HandleFunc("/tasks/", func(w http.ResponseWriter, r *http.Request) {
-		ID := strings.TrimPrefix(r.URL.Path, "/tasks/")
-		task, ok := tasks.Get(ID)
-		if !ok {
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintf(w, "404 Could not find Task with ID %v", ID)
-			return
-		}
-		json, err := json.Marshal(task)
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
-		_, err = w.Write(json)
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
+		switch r.Method {
+		case http.MethodGet:
+			handleTaskGet(w, r)
+		case http.MethodDelete:
+			handleTaskDelete(w, r)
+		default:
+			log.Printf("%v method is not implement on path /tasks/", r.Method)
+			w.WriteHeader(http.StatusNotImplemented)
+			fmt.Fprintf(w, "Not Implemented: %v", r.Method)
 		}
 	})
 }
@@ -109,7 +135,7 @@ func executeJobAndReportToTask[Input Executer[Output], Output any](task Task, i 
 	}
 	task.Result = jsonStringResult
 	task.Status = StatusDone
-	tasks.Set(task.ID, task)
+	tasks.Update(task.ID, task)
 }
 
 func DefineJob[Input Executer[Output], Output any](path string) {
