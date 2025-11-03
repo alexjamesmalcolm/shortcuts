@@ -88,7 +88,9 @@ func (i OptimalRouteInput) Execute() (OptimalRouteResult, error) {
 	for pair := range itertools.PermutationsStr(addresses, 2) {
 		start := addressToLocation[pair[0]]
 		end := addressToLocation[pair[1]]
-		if start.Address == i.Destination.Address || end.Address == i.Origin.Address {
+		if start.Address == i.Destination.Address ||
+			end.Address == i.Origin.Address ||
+			(start.Address == i.Origin.Address && end.Address == i.Destination.Address) {
 			continue
 		}
 		result := getTravelTime(start, end, i.Profile)
